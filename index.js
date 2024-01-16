@@ -25,7 +25,7 @@ const typeToHaxeType = (type) => {
             return "Bool";
         case "object":
             return "Dynamic";
-        case "char*":
+        case "char":
             return "String";
         case "vector3":
             return "Vector3";
