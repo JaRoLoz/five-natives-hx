@@ -1,0 +1,16 @@
+{
+    "name": "hx-fivem",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "Haxe type generator for FiveM natives",
+    "main": "index.js",
+    "scripts": {
+        "start": "node . > Types.hx"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "node-fetch": "^3.3.2"
+    }
+}
