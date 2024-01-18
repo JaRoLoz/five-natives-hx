@@ -9,8 +9,8 @@ const transformType = (type) => {
         "number[]": "Vector3",
         "number": "Number",
         "string": "String",
-        "boolean": "Boolean",
-        "bool": "Boolean",
+        "boolean": "Bool",
+        "bool": "Bool",
         "any": "Int",
         "object": "Dynamic",
         "void": "Void",
@@ -57,26 +57,30 @@ const getFunctionParameters = (line) => {
     const paramStrings = parameters.map(param => param.trim());
     const paramsArray = paramStrings.map(param =>
         param.trim().split(":"));
-    return paramsArray.map(([name, type]) => [checkForReservedKeyWords(name), type]);
+    return paramsArray.map(([name, type]) => [checkForReservedKeyWords(name).replace("?", ""), type]);
 }
 
 const splitted = text.split("declare function");
 const functions = splitted.map(line => line.split(";")[0].trim()).filter(line => !line.startsWith("/*"));
-const multiReturns = [];
-const functionStrings = functions.map(line => {
+const multiReturns = new Map();
+const functionStrings = new Map();
+functions.forEach(line => {
     const params = getFunctionParameters(line)
         .map(([name, type]) => [name, transformType(type)]);
     const name = getFunctionName(line);
     const retval = getFunctionReturnType(line);
     if (Array.isArray(retval)) {
-        multiReturns.push(generateMultiReturn(name, retval));
-        return `static function ${name}(${params.map(([name, type]) => `${name}: ${type}`).join(", ")}):${name}ReturnType;`;
+        multiReturns.set(`${name}ReturnType;`, generateMultiReturn(name, retval));
+        functionStrings.set(name, `static function ${name}(${params.map(([name, type]) => `${name}: ${type}`).join(", ")}):${name}ReturnType;`);
     } else {
-        return `static function ${name}(${params.map(([name, type]) => `${name}: ${type}`).join(", ")}):${transformType(retval)};`;
+        functionStrings.set(name, `static function ${name}(${params.map(([name, type]) => `${name}: ${type}`).join(", ")}):${transformType(retval)};`);
     }
 });
+functionStrings.set("vector3", "static function vector3(x:Number, y:Number, z:Number):Vector3;");
 
-const template = `@:native("_G")
+const template = `typedef Number = Float;
+
+@:native("_G")
 extern class Citizen {
 	static var source(default, null):Int;
 	static function Wait(ms:Int):Void;
@@ -98,16 +102,16 @@ extern class Json {
 }
 
 class Vector3 {
-	extern public var x:Float;
-	extern public var y:Float;
-	extern public var z:Float;
+	extern public var x:Number;
+	extern public var y:Number;
+	extern public var z:Number;
 }
 
-${multiReturns.join("\n")}
+${Array.from(multiReturns.values()).join("\n")}
 
 @:native("_G")
 extern class Natives {
-${functionStrings.map(str => "    " + str).join("\n")}
-}}`;
+${Array.from(functionStrings.values()).map(str => "    " + str).join("\n")}
+}`;
 
 console.log(template);
