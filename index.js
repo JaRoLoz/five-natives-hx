@@ -97,6 +97,9 @@ class Vector3 {
 
 ${multiReturns.join("\n")}
 
-${functionStrings.join("\n")}`;
+@:native("_G")
+extern class Natives {
+${functionStrings.map(str => "    " + str).join("\n")}
+}}`;
 
 console.log(template);
