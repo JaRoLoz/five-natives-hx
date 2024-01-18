@@ -3,6 +3,7 @@ import fetch from 'node-fetch';
 const response = await fetch('https://www.npmjs.com/package/@citizenfx/client/file/2f83c0b9a6706e83a1b996af781fb93c14b26fac2491a91325796520377c834a');
 const text = await response.text();
 
+const reservedKeyWords = ["var", "dynamic", "override"];
 const transformType = (type) => {
     const replacements = {
         "number[]": "Vector3",
@@ -42,14 +43,21 @@ ${typesStrings.join("\n")}
 }`;
 }
 
+const checkForReservedKeyWords = (name) => {
+    if (reservedKeyWords.includes(name))
+        return "_" + name;
+    return name;
+}
+
 const getFunctionParameters = (line) => {
     const splitted = line.split("(");
     const parameters = splitted[1].split(")")[0].split(",");
     if (parameters.length === 1 && parameters[0].trim() === "")
         return [];
     const paramStrings = parameters.map(param => param.trim());
-    return paramStrings.map(param =>
+    const paramsArray = paramStrings.map(param =>
         param.trim().split(":"));
+    return paramsArray.map(([name, type]) => [checkForReservedKeyWords(name), type]);
 }
 
 const splitted = text.split("declare function");
